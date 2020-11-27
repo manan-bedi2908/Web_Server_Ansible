@@ -1,0 +1,54 @@
+- hosts: all
+  vars_files:
+  - httpd_vars.yml
+  tasks:
+  -file: 
+    state: directory
+    path: "{{ dvd_dir }}"
+	
+  -mount: 
+    src: "/dev/cdrom"
+    path: "{{ dvd_dir }}"
+    state: mounted
+    fstype: "iso9660"
+
+  -yum_repository:
+    baseurl: "{{ dvd_dir }}/AppStream"
+    name:  "mydvd1"
+    description: "Yum DVD for Package"
+    gpgcheck: no
+
+  -yum_repository:
+    baseurl: "{{ dvd_dir }}/BaseOS"
+    name: "mydvd2"
+    description: "Yum DVD for Package"
+    gpgcheck: no
+
+  -package:
+    name: "httpd"
+    state: present
+	
+  -file:
+    state: directory
+    path: "{{ doc_root }}"
+
+  -template:
+    dest: "/etc/httpd/conf.d/lw.conf"
+    src: "lw.conf"
+
+  -copy:
+    dest: "{{ doc_root }}/index.html"
+    content: "This is the Web-Site"
+
+  -service:
+    name: "httpd"
+    state: restarted
+    enabled: yes
+
+  -firewalld:
+    port: "{{ port_no }}/tcp"
+    state: enabled
+    permanent: yes
+    immediate: yes
+ 
+
